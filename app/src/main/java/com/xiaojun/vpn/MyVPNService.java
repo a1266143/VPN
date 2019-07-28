@@ -28,10 +28,10 @@ import java.nio.charset.Charset;
  */
 public class MyVPNService extends VpnService {
 
-    String[] appPackages = {"com.xiaojun.nio"};
+    String[] appPackages = {"com.xiaojun.nio", "com.example.myapplication"};
 
-    private void log(String content){
-        Log.e("xiaojun",content);
+    private void log(String content) {
+        Log.e("xiaojun", content);
     }
 
     @Override
@@ -44,28 +44,20 @@ public class MyVPNService extends VpnService {
         //become a forground service
         updateForegroundNotification("正在连接");
         //1.Call VpnService.protect() to keep your app's tunnel socket outside of the system VPN and avoid a circular connection.
-        try {
-            final DatagramChannel channel = DatagramChannel.open();
-            channel.configureBlocking(false);
-            boolean isProtected = protect(channel.socket());
-            if (!isProtected){
-                log("channel can not protect");
-            }else{
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            startVPN(channel);
-                        }catch (IOException e){
-                            log("IOException:"+e.getLocalizedMessage());
-                        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(true){
+                    startVPN();
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-                }).start();
+                }
+
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            log("catch exception:"+e.getLocalizedMessage());
-        }
+        }).start();
 
         //4--------------------------------
         // Configure a new interface from our VpnService instance. This must be done
@@ -90,61 +82,87 @@ public class MyVPNService extends VpnService {
         return START_STICKY;
     }
 
-    private void startVPN(DatagramChannel channel) throws IOException {
-        log("start connect 192.168.0.116......");
-        channel.connect(new InetSocketAddress("192.168.0.116",8080));
-        ByteBuffer packet = ByteBuffer.allocate(Short.MAX_VALUE);
-        channel.write(packet);
+    private void startVPN() {
+        log("start connect 192.168.2.107......");
+
+        ParcelFileDescriptor localTunnel = null;
+        try {
+            final DatagramChannel channel = DatagramChannel.open();
+            channel.configureBlocking(false);
+            boolean isProtected = protect(channel.socket());
+            if (!isProtected)
+                return;
+            channel.connect(new InetSocketAddress("192.168.2.107", 8080));
+            ByteBuffer packet = ByteBuffer.allocate(Short.MAX_VALUE);
+//        channel.write(packet);
 //        channel.send(packet,new InetSocketAddress("192.168.0.116",8080));
-        //当上面的代码连接成功之后就可以先进行握手，验证等操作
-        //....这里忽略
-        VpnService.Builder builder = new VpnService.Builder();
-        //添加哪些APP使用VPN
-        PackageManager packageManager = getPackageManager();
-        for (String appPackage:appPackages){
-            try {
-                packageManager.getPackageInfo(appPackage,0);
-                builder.addAllowedApplication(appPackage);
-                log("add appPackage:"+appPackage);
-            } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
+            //当上面的代码连接成功之后就可以先进行握手，验证等操作
+            //....这里忽略
+            VpnService.Builder builder = new VpnService.Builder();
+            //添加哪些APP使用VPN
+            PackageManager packageManager = getPackageManager();
+            for (String appPackage : appPackages) {
+                try {
+                    packageManager.getPackageInfo(appPackage, 0);
+                    builder.addAllowedApplication(appPackage);
+                    log("App Monitor:" + appPackage);
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
             }
-        }
-        ParcelFileDescriptor localTunnel = builder
-                .addAddress("192.168.0.116",24)
-                .addRoute("0.0.0.0",0)
-                .addDnsServer("192.168.2.1")
-                .setMtu(Short.MAX_VALUE)//设置虚拟网络端口的最大传输单元
-                .setSession("MyVPNService")
-                .establish();//建立VPN通道
-        updateForegroundNotification("VPN已连接");
-        FileInputStream is = new FileInputStream(localTunnel.getFileDescriptor());
-        FileOutputStream os = new FileOutputStream(localTunnel.getFileDescriptor());
-        ByteBuffer buffer = ByteBuffer.allocate(Short.MAX_VALUE);
-        while(true){
-            try{
+            localTunnel = builder
+                    .addAddress("192.168.1.1", 24)//建立此虚拟网卡到地址
+                    .addRoute("0.0.0.0", 0)
+                    .addDnsServer("192.168.1.1")
+                    .setMtu(Short.MAX_VALUE)//设置虚拟网络端口的最大传输单元
+                    .setSession("MyVPNService")
+                    .establish();//建立VPN通道
+            updateForegroundNotification("VPN已连接");
+            ByteBuffer byteb = ByteBuffer.allocate(Short.MAX_VALUE);
+            byteb.put("fuckyou".getBytes("GB2312"));
+            byteb.flip();
+            channel.write(byteb);
+            FileInputStream is = new FileInputStream(localTunnel.getFileDescriptor());
+            FileOutputStream os = new FileOutputStream(localTunnel.getFileDescriptor());
+            ByteBuffer buffer = ByteBuffer.allocate(Short.MAX_VALUE);
+            while (true) {
+
                 buffer.clear();//会循环，所以这里清除一下标记
 //            InetSocketAddress socketAddress = (InetSocketAddress) channel.receive(buffer);//读取channel中的数据到buffer
                 int length = is.read(buffer.array()); //从输入流读取输出包（这里我的理解是，输入流实际上是系统里的APP发送出去的数据，经由这个输入流，所以叫输入流的输出包）
-                if (length>0){
+                if (length > 0) {
                     buffer.limit(length);
                     //查看读取的数据
-//                buffer.flip();//转换成读模式
+//                    buffer.flip();//转换成读模式
+                    log("position="+buffer.position());
                     byte[] bytes = new byte[length];
                     for (int i = 0; i < bytes.length; i++) {
                         bytes[i] = buffer.get();
                     }
-                    log("读取到的数据:"+new String(bytes, Charset.forName("UTF-8")));
+                    log("读取到的数据:" + new String(bytes,Charset.forName("UTF-8"))+",bytes.length="+bytes.length);
+                    buffer.rewind();//重新设置position的位置位0
+                    channel.write(buffer);//写入到服务器上
                 }
                 packet.clear();
                 length = channel.read(packet);//读取从服务器那边返回的数据
-                if (length>0){
-                    os.write(packet.array(),0,length);//将返回的数据写给特定的app
+                if (length > 0) {
+                    os.write(packet.array(), 0, length);//将返回的数据写给特定的app
                 }
-            }catch (Exception e){
-                log("getException:"+e.getLocalizedMessage());
+
+            }
+        } catch (IOException e) {
+            log("socket break:"+e.getLocalizedMessage());
+        } finally {
+            if (localTunnel != null) {
+                try {
+                    localTunnel.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    log("ParcelFileDescriptor close error");
+                }
             }
         }
+
     }
 
     private void updateForegroundNotification(final String message) {
