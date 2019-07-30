@@ -8,9 +8,7 @@ import android.util.Log;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.nio.ByteBuffer;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -26,8 +24,11 @@ public class ExampleInstrumentedTest {
 
         assertEquals("com.xiaojun.vpn", appContext.getPackageName());
 
+        //00010001 : 17
+        byte tmp = 0x11;
+        Log.e("xiaojun","00010001左移4位的值为:"+(byte)(tmp<<4)+",之后再右移4位的值为:"+((byte)(((byte)(tmp<<4))>>4)));
         //ByteBuffer字节数组缓冲区
-        ByteBuffer buffers = ByteBuffer.allocate(Short.MAX_VALUE);
+        /*ByteBuffer buffers = ByteBuffer.allocate(Short.MAX_VALUE);
         //mark标记，position标记，limit界限，capacity容量
 
         //get和put方法向缓冲区读取数据
@@ -41,7 +42,7 @@ public class ExampleInstrumentedTest {
             Thread.currentThread().sleep(100000);
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
+        }*/
 
 
         //ByteBuffer不是线程安全

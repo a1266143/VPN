@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
         edtIP = findViewById(R.id.edt_ip);
         edtPort = findViewById(R.id.edt_port);
         mExecutorService = Executors.newSingleThreadExecutor();
+//        PmManagerUtils.logPackages(this);
     }
 
     public void openVPN(View view) {
