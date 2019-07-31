@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.FileInputStream;
@@ -38,52 +39,67 @@ public class MyVPNService extends VpnService {
         Log.e("xiaojun", content);
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-    }
+//    @Override
+//    public void onCreate() {
+//        super.onCreate();
+//    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        //become a forground service
         updateForegroundNotification("正在连接");
-        //1.Call VpnService.protect() to keep your app's tunnel socket outside of the system VPN and avoid a circular connection.
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    startVPN();
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-            }
-        }).start();
-
-        //4--------------------------------
-        // Configure a new interface from our VpnService instance. This must be done
-        // from inside a VpnService.
-        /*VpnService.Builder builder = new VpnService.Builder();
-        // Create a local TUN interface using predetermined addresses. In your app,
-        // you typically use values returned from the VPN gateway during handshaking.
-        ParcelFileDescriptor localTunnel = builder
-                .addAddress("192.168.0.116", 24)
-                .addRoute("0.0.0.0", 0)
-                .addDnsServer("192.168.0.1")
-                .establish();//建立
-        if (localTunnel == null) {
-            Toast.makeText(MyVPNService.this, "没有获得VPN权限", Toast.LENGTH_SHORT).show();
-        } else {
-            FileInputStream is = new FileInputStream(localTunnel.getFileDescriptor());
-            FileOutputStream os = new FileOutputStream(localTunnel.getFileDescriptor());
-            ByteBuffer packet = ByteBuffer.allocate(Short.MAX_VALUE);
-
-//            is.read
-        }*/
+        startVPN2();
         return START_STICKY;
+    }
+
+    private VpnService.Builder config(String protocoInfo) {
+        Builder builder = new Builder();
+        String[] splits = protocoInfo.split(" ");
+        if (splits.length > 0) {
+            for (String param : splits) {
+                String[] it = param.split(",");
+                String first = it[0];
+                if (TextUtils.equals("m", first)) {
+                    //虚拟网络最大传输单元，如果发送的包长度超过这个数字，则会被分包
+                    builder.setMtu(Integer.parseInt(it[1]));
+                } else if (TextUtils.equals("a", first)) {
+                    //虚拟网络端口的IP地址
+                    builder.addAddress(it[1], Integer.parseInt(it[2]));
+                } else if (TextUtils.equals("r", first)) {
+                    //只有匹配上的IP包，才会被路由到虚拟端口上去，如果是0.0.0.0/0的话，则将所有的IP包都路由到虚拟端口上
+                    builder.addRoute(it[1], Integer.parseInt(it[2]));
+                } else if (TextUtils.equals("s", first)) {
+                    //就是添加DNS域名的自动补齐。DNS服务器必须通过全域名进行搜索，
+                    // 但每次查找都输入全域名太麻烦了，可以通过配置域名的自动补齐
+                    // 规则予以简化；
+                    builder.addSearchDomain(it[1]);
+                }
+            }
+        }
+        builder.setSession("VPN");
+        //TODO 添加DNS服务器地址
+        //------------------------------
+        return builder;
+    }
+
+    private void startVPN2() {
+        VPN vpn = new VPN(this);
+        vpn.addAllowApps(appPackages);
+        vpn.startVPN(getString(R.string.configjson), new VPN.VpnStateCallback() {
+            @Override
+            public VpnService.Builder establish(String protocoInfo) {
+                return config(protocoInfo);
+            }
+
+            @Override
+            public void success() {
+                LogUtils.d(MyVPNService.this.getClass(), "VPN建立成功");
+            }
+
+            @Override
+            public void error(String info) {
+                LogUtils.d(MyVPNService.this.getClass(), "VPN建立失败:" + info);
+            }
+        });
     }
 
     private void startVPN() {
@@ -93,7 +109,7 @@ public class MyVPNService extends VpnService {
             final DatagramChannel channel = DatagramChannel.open();
             channel.configureBlocking(false);
             boolean isProtected = protect(channel.socket());
-            if (!isProtected){
+            if (!isProtected) {
                 log("Protected failed");
                 return;
             }

@@ -1,3 +1,83 @@
 <resources>
     <string name="app_name">VPN</string>
+    <string name="configjson">{
+      "stats": {},
+      "policy": {
+        "levels":{
+          "0":{
+            "bufferSize":0
+          }
+        }
+      },
+      "inbound": {
+        "protocol": "socks",
+        "listen": "127.0.0.1",
+        "domainOverride": ["http", "tls"],
+        "settings": {
+          "auth": "noauth",
+          "udp": true
+        },
+        "sniffing": {
+          "enabled": true,
+          "destOverride": ["http", "tls"]
+        }
+      },
+      "outbound": {
+            "protocol": "vmess",
+            "mux": {
+                "enabled": true,
+                "concurrency": 1024
+            },
+            "settings": {
+                "vnext": [
+                    {
+                        "address": "35.221.149.67",
+                        "port": 53454
+     ,
+                        "users": [
+                            {
+                                "id": "3061e463-a13e-4b51-81ec-86d84aab451d",
+                                "alterId": 32,
+                                "security": "auto",
+                                "level": 0
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+      "outboundDetour": [{
+        "protocol": "freedom",
+        "settings": {},
+        "tag": "direct"
+      }],
+      "dns": {
+        "servers": [
+          "223.5.5.5"
+        ]
+      },
+      "port": 10808,
+      "#lib2ray": {
+        "enabled": true,
+        "listener": {
+          "onUp": "#none",
+          "onDown": "#none"
+        },
+        "env": ["V2RaySocksPort=10808"],
+        "render": [],
+        "escort": [],
+        "vpnservice": {
+          "Target": "${datadir}tun2socks",
+          "Args": ["--netif-ipaddr", "26.26.26.2", "--netif-netmask", "255.255.255.0", "--socks-server-addr", "127.0.0.1:$V2RaySocksPort", "--tunfd", "3", "--tunmtu", "1500", "--sock-path", "\/dev\/null", "--loglevel", "4", "--enable-udprelay"],
+          "VPNSetupArg": "m,1500 a,26.26.26.1,24 r,0.0.0.0,0"
+        },
+        "preparedDomainName": {
+          "tcpVersion": "tcp4",
+          "udpVersion": "udp4"
+        }
+      },
+      "log": {
+        "loglevel": "debug"
+      }
+    }</string>
 </resources>

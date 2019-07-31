@@ -49,33 +49,11 @@ public class MainActivity extends AppCompatActivity {
         }
         //VPNService prepare成功
         else {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    setVPN();
-                }
-            }).start();
+            startVPNService();
         }
     }
 
-    private void setVPN() {
-        /*String host = edtIP.getText().toString();
-        int port = Integer.parseInt(edtPort.getText().toString());
-//        startService(new Intent(this,MyVPNService.class));
-        //2.Call VpnService.protect() to keep your app's tunnel socket outside of the system VPN and avoid a circular connection.
-        VpnService service = new MyVPNService();
-        DatagramSocket socket = new DatagramSocket();
-        boolean isSuccess = service.protect(socket);//保护本APP不要使用VPN通道
-        if (isSuccess){
-            //3------------------------------------连接到VPN通道
-            DatagramSocket vpnSocket = new DatagramSocket(port);
-            SocketAddress address = new InetSocketAddress(host,port);
-            vpnSocket.connect(address);
-            //startService to start VPN
-            startService(new Intent(MainActivity.this,MyVPNService.class));
-        }else{
-            Toast.makeText(MainActivity.this,"保护本APP通道失败",Toast.LENGTH_SHORT).show();
-        }*/
+    private void startVPNService() {
         startService(new Intent(this,MyVPNService.class));
     }
 
