@@ -1,4 +1,4 @@
-package com.xiaojun.vpn;
+package com.xiaojun.vpn.util;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;

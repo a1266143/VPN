@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".MyApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -22,7 +23,7 @@
         </activity>
 
         <!-- VPNService -->
-        <service android:name=".MyVPNService"
+        <service android:name=".services.MyVPNService"
             android:permission="android.permission.BIND_VPN_SERVICE" >
             <intent-filter>
                 <action android:name="android.net.VpnService"/>

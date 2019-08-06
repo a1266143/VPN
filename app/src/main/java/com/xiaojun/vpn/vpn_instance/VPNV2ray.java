@@ -1,8 +1,10 @@
-package com.xiaojun.vpn;
+package com.xiaojun.vpn.vpn_instance;
 
 import android.content.pm.PackageManager;
 import android.net.VpnService;
 import android.os.ParcelFileDescriptor;
+
+import com.xiaojun.vpn.util.LogUtils;
 
 import libv2ray.Libv2ray;
 import libv2ray.V2RayCallbacks;
@@ -13,7 +15,7 @@ import libv2ray.V2RayVPNServiceSupportsSet;
  * VPN相关
  * Crated by xiaojun on 2019/7/31 16:53
  */
-public class VPN implements V2RayCallbacks, V2RayVPNServiceSupportsSet {
+public class VPNV2ray implements V2RayCallbacks, V2RayVPNServiceSupportsSet {
 
     private V2RayPoint mV2RayPoint;
     private VpnService mVpnService;
@@ -21,7 +23,7 @@ public class VPN implements V2RayCallbacks, V2RayVPNServiceSupportsSet {
     private String[] mAllowedApps = new String[0];
     private int fd;//虚拟网卡 fd
 
-    public VPN(VpnService service) {
+    public VPNV2ray(VpnService service) {
         mV2RayPoint = Libv2ray.newV2RayPoint();
         mVpnService = service;
     }
@@ -42,6 +44,7 @@ public class VPN implements V2RayCallbacks, V2RayVPNServiceSupportsSet {
      */
     public void startVPN(String configContent, VpnStateCallback callback) {
         LogUtils.d(getClass(),"startVPN");
+        mV2RayPoint.setPackageName(mVpnService.getPackageName());
         mVpnStateCallback = callback;
         mV2RayPoint.setCallbacks(this);
         mV2RayPoint.setVpnSupportSet(this);
@@ -60,7 +63,7 @@ public class VPN implements V2RayCallbacks, V2RayVPNServiceSupportsSet {
     //----------------------------V2RayVPNServiceSupportsSet--------------------------
     @Override
     public long getVPNFd() {
-        LogUtils.d(getClass(), "getVPNFd");
+        LogUtils.d(getClass(), "getVPNFd,fd="+fd);
         return fd;
     }
 
@@ -68,6 +71,7 @@ public class VPN implements V2RayCallbacks, V2RayVPNServiceSupportsSet {
     public long prepare() {
         LogUtils.d(getClass(), "prepare");
         mV2RayPoint.vpnSupportReady();
+        LogUtils.d(getClass(),"prepare,isRunning="+mV2RayPoint.getIsRunning());
         return 1;
     }
 
@@ -86,8 +90,8 @@ public class VPN implements V2RayCallbacks, V2RayVPNServiceSupportsSet {
             //添加允许哪些APP走VPN通道
             PackageManager packageManager = mVpnService.getPackageManager();
             for (String app : mAllowedApps) {
-                //添加哪些APP使用VPN
                 try {
+                    //添加哪些APP使用VPN
                     packageManager.getPackageInfo(app, 0);
                     builder.addAllowedApplication(app);
                 } catch (PackageManager.NameNotFoundException e) {

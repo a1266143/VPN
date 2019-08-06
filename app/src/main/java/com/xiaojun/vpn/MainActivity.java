@@ -9,6 +9,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
 
+import com.xiaojun.vpn.services.MyVPNService;
+import com.xiaojun.vpn.util.DialogUtils;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 

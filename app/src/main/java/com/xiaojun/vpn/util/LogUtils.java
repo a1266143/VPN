@@ -1,4 +1,4 @@
-package com.xiaojun.vpn;
+package com.xiaojun.vpn.util;
 
 import android.util.Log;
 

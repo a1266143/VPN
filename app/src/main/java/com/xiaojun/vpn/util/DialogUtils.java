@@ -1,10 +1,9 @@
-package com.xiaojun.vpn;
+package com.xiaojun.vpn.util;
 
 import android.content.Context;
 import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
-import android.view.View;
 
 /**
  * 对话框工具
