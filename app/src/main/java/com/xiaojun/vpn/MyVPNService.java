@@ -11,6 +11,8 @@ import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import com.xiaojun.vpn.protocol.IPpacketParser;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -120,7 +122,7 @@ public class MyVPNService extends VpnService {
 //                    .addAddress("fd00:1:fd00:1:fd00:1:fd00:1", 128)
                     .addRoute("0.0.0.0", 0)
 //                    .addDnsServer(tunDNS)
-                    .setMtu(Short.MAX_VALUE)//设置虚拟网络端口的最大传输单元
+//                    .setMtu(Short.MAX_VALUE)//设置虚拟网络端口的最大传输单元
                     .setSession("MyVPNService")
                     .establish();//建立VPN通道
             log("VPN已连接,虚拟网卡IP:" + tunLocalIP + ",DNS服务器:" + tunDNS);

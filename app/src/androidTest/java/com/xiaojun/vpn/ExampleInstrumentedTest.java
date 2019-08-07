@@ -25,8 +25,10 @@ public class ExampleInstrumentedTest {
         assertEquals("com.xiaojun.vpn", appContext.getPackageName());
 
         //00010001 : 17
-        byte tmp = 0x11;
-        Log.e("xiaojun","00010001左移4位的值为:"+(byte)(tmp<<4)+",之后再右移4位的值为:"+((byte)(((byte)(tmp<<4))>>4)));
+//        byte tmp = 0x11;
+//        Log.e("xiaojun","00010001左移4位的值为:"+(byte)(tmp<<4)+",之后再右移4位的值为:"+((byte)(((byte)(tmp<<4))>>4)));
+        Log.e("xiaojun","0xff无符号右移7位之后的值为:"+(0xff>>>7));
+        Log.e("xiaojun","0xff::"+((byte)(((byte)0xff)>>>7)));
         //ByteBuffer字节数组缓冲区
         /*ByteBuffer buffers = ByteBuffer.allocate(Short.MAX_VALUE);
         //mark标记，position标记，limit界限，capacity容量
